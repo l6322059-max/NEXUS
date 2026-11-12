@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090b10">
+<title>NEXUS — Private file space</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:dark;--bg:#090b10;--panel:#11151e;--panel2:#151b26;--line:#252d3b;--muted:#8e9aab;--text:#f3f6fb;--blue:#548dff;--cyan:#50e2ee;--danger:#ff647c}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#1a2b49 0,transparent 48%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.wrap{width:min(1050px,calc(100% - 32px));margin:auto}.top{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}.brand{display:flex;align-items:center;gap:11px;font-weight:850;letter-spacing:.16em}.mark{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:grid;place-items:center;color:#07101c;font-weight:950;box-shadow:0 0 28px #548dff55}.status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}.dot{width:7px;height:7px;border-radius:50%;background:#57e6a1;box-shadow:0 0 12px #57e6a1}
+.hero{padding:55px 0 28px}.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase}.hero h1{font-size:clamp(36px,7vw,64px);line-height:1.02;letter-spacing:-.055em;margin:12px 0}.hero h1 span{background:linear-gradient(90deg,#fff,#81caff 55%,#58e6ed);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{color:var(--muted);max-width:560px;margin:15px 0 0}
+.grid{display:grid;grid-template-columns:1fr 1.35fr;gap:18px;padding-bottom:60px}.panel{background:linear-gradient(160deg,#151b27ee,#0f131bee);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 18px 55px #0004}.panel h2{font-size:16px;margin:0 0 7px}.sub{font-size:13px;color:var(--muted);margin:0 0 18px}
+.field{width:100%;border:1px solid var(--line);background:#090d15;color:var(--text);padding:13px 14px;border-radius:11px;outline:none;font:inherit}.field:focus{border-color:#548dff;box-shadow:0 0 0 3px #548dff20}
+.btn{border:0;border-radius:11px;padding:12px 16px;font-weight:750;font:inherit;cursor:pointer;transition:.18s}.primary{background:linear-gradient(100deg,var(--blue),#4bcbdc);color:#07101b;width:100%;margin-top:11px}.primary:hover{filter:brightness(1.1);transform:translateY(-1px)}.secondary{background:#202a3a;color:#dce7f6;border:1px solid #344158}.small{padding:8px 11px;font-size:12px}.btn:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:12px;color:var(--muted);margin-top:13px}.msg{font-size:13px;margin-top:12px;min-height:20px;color:var(--cyan)}.account{display:none;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;padding:10px 12px;background:#0b111b;border:1px solid var(--line);border-radius:12px}.email{font-size:12px;color:#cbd5e3;overflow-wrap:anywhere}
+.drop{border:1px dashed #3a4c68;border-radius:15px;background:#0b111b;padding:27px 15px;text-align:center;cursor:pointer;transition:.2s}.drop:hover,.drop.drag{border-color:var(--cyan);background:#10202a}.drop strong{display:block;margin:8px 0 3px}.drop span{font-size:12px;color:var(--muted)}.drop input{display:none}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 12px}.toolbar h2{margin:0}.files{display:grid;gap:9px}.file{display:flex;align-items:center;gap:12px;padding:12px;background:#0c111a;border:1px solid #202a38;border-radius:12px;min-width:0}.fileicon{width:38px;height:38px;flex:none;border-radius:10px;background:#1a2940;display:grid;place-items:center;color:#7eb5ff;font-size:18px}.fname{font-weight:650;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fmeta{font-size:11px;color:var(--muted)}.fileinfo{min-width:0;flex:1}.actions{display:flex;gap:6px}.empty{text-align:center;color:var(--muted);padding:34px 12px;border:1px dashed var(--line);border-radius:13px;font-size:13px}.footer{color:#647184;text-align:center;font-size:11px;padding:0 0 25px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.hero{padding-top:40px}.panel{padding:18px}.file{gap:9px}.actions{flex-direction:column}.top{height:66px}}
+</style>
+</head>
+<body><div class="wrap">
+<header class="top"><div class="brand"><div class="mark">N</div>NEXUS</div><div class="status"><i class="dot"></i> PRIVATE STORAGE</div></header>
+<section class="hero"><div class="eyebrow">Your files. Your space.</div><h1>Everything in <span>one place.</span></h1><p>A clean, private space to upload, organize and access your files from anywhere. Sign in with your email to get started.</p></section>
+<main class="grid">
+<section class="panel"><h2>Your account</h2><p class="sub">Sign in securely with a one-time email link.</p>
+<div id="signed" class="account"><span id="userEmail" class="email"></span><button id="logout" class="btn secondary small">Sign out</button></div>
+<div id="loginBox"><input id="email" class="field" type="email" autocomplete="email" placeholder="you@example.com"><button id="login" class="btn primary">Send sign-in link</button><div id="authMsg" class="msg" aria-live="polite"></div></div>
+<div class="note">Your files are private to your account. Never share your sign-in link.</div>
+</section>
+<section class="panel"><h2>File vault</h2><p class="sub">Upload files and access them on any device.</p>
+<label class="drop" id="drop"><input id="picker" type="file" multiple><div style="font-size:26px">⇧</div><strong>Drop files here or tap to browse</strong><span>Files are stored privately in your account</span></label>
+<div id="uploadMsg" class="msg" aria-live="polite"></div>
+<div class="toolbar"><h2>Your files</h2><button id="refresh" class="btn secondary small">↻ Refresh</button></div>
+<div id="files" class="files"><div class="empty">Sign in to view your files.</div></div>
+</section></main>
+<div class="footer">NEXUS · Private by design</div>
+</div>
+<script>
+const SUPABASE_URL = "https://itvotsjulevvvjdcmebj.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_CfyUcGsWj-BciLBrpcvKPw_KRwtVKRm";
+const BUCKET = "nexus-files";
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const $ = id => document.getElementById(id);
+let currentUser = null;
+const say = (id, text, bad=false) => { $(id).textContent=text; $(id).style.color=bad?"#ff8194":"#50e2ee"; };
+const sizeText = n => n<1024? n+" B":n<1048576?(n/1024).toFixed(1)+" KB":n<1073741824?(n/1048576).toFixed(1)+" MB":(n/1073741824).toFixed(2)+" GB";
+function safeName(name){return name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,150)||"file";}
+async function refreshSession(){
+ const {data:{session}}=await client.auth.getSession();
+ currentUser=session?.user||null; renderAuth(); if(currentUser) await loadFiles();
+}
+function renderAuth(){
+ $("signed").style.display=currentUser?"flex":"none";
+ $("loginBox").style.display=currentUser?"none":"block";
+ $("userEmail").textContent=currentUser?.email||"";
+}
+$("login").addEventListener("click",async()=>{
+ const email=$("email").value.trim(); if(!email){say("authMsg","Enter your email address.",true);return;}
+ $("login").disabled=true;say("authMsg","Sending your secure sign-in link…");
+ const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split("#")[0]}});
+ $("login").disabled=false;
+ say("authMsg",error?error.message:"Check your inbox and tap the NEXUS sign-in link.",!!error);
+});
+$("logout").addEventListener("click",async()=>{await client.auth.signOut();currentUser=null;renderAuth();$("files").innerHTML='<div class="empty">Sign in to view your files.</div>';});
+$("refresh").addEventListener("click",loadFiles);
+async function loadFiles(){
+ if(!currentUser){$("files").innerHTML='<div class="empty">Sign in to view your files.</div>';return;}
+ $("files").innerHTML='<div class="empty">Loading your files…</div>';
+ const {data,error}=await client.storage.from(BUCKET).list(currentUser.id,{limit:100,sortBy:{column:"created_at",order:"desc"}});
+ if(error){$("files").innerHTML='<div class="empty">Could not load files: '+escapeHtml(error.message)+'</div>';return;}
+ const entries=(data||[]).filter(x=>x.name&&!x.name.startsWith("."));
+ if(!entries.length){$("files").innerHTML='<div class="empty">No files yet. Upload your first file above.</div>';return;}
+ $("files").innerHTML="";
+ for(const item of entries){
+  const row=document.createElement("div");row.className="file";
+  const icon=document.createElement("div");icon.className="fileicon";icon.textContent="▤";
+  const info=document.createElement("div");info.className="fileinfo";
+  const name=document.createElement("div");name.className="fname";name.textContent=item.name;
+  const meta=document.createElement("div");meta.className="fmeta";meta.textContent=sizeText(item.metadata?.size||0);
+  info.append(name,meta);
+  const actions=document.createElement("div");actions.className="actions";
+  const download=document.createElement("button");download.className="btn secondary small";download.textContent="Download";
+  download.addEventListener("click",async()=>{download.disabled=true;const {data,error}=await client.storage.from(BUCKET).createSignedUrl(currentUser.id+"/"+item.name,60);download.disabled=false;if(error){say("uploadMsg",error.message,true);return;}window.open(data.signedUrl,"_blank","noopener");});
+  const del=document.createElement("button");del.className="btn secondary small";del.textContent="Delete";
+  del.addEventListener("click",async()=>{if(!confirm("Delete "+item.name+"?"))return;del.disabled=true;const {error}=await client.storage.from(BUCKET).remove([currentUser.id+"/"+item.name]);if(error){say("uploadMsg",error.message,true);del.disabled=false;}else{say("uploadMsg","File deleted.");loadFiles();}});
+  actions.append(download,del);row.append(icon,info,actions);$("files").append(row);
+ }
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function uploadFiles(list){
+ if(!currentUser){say("uploadMsg","Sign in before uploading files.",true);return;}
+ if(!list?.length)return;
+ for(const file of list){
+  say("uploadMsg","Uploading "+file.name+"…");
+  const path=currentUser.id+"/"+Date.now()+"-"+safeName(file.name);
+  const {error}=await client.storage.from(BUCKET).upload(path,file,{upsert:false,contentType:file.type||"application/octet-stream"});
+  if(error){say("uploadMsg","Upload failed: "+error.message,true);return;}
+ }
+ say("uploadMsg","Upload complete ✓");$("picker").value="";await loadFiles();
+}
+$("picker").addEventListener("change",e=>uploadFiles(e.target.files));
+const drop=$("drop");
+drop.addEventListener("click",e=>{if(e.target!==$("picker"))$("picker").click();});
+drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("drag");});
+drop.addEventListener("dragleave",()=>drop.classList.remove("drag"));
+drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("drag");uploadFiles(e.dataTransfer.files);});
+client.auth.onAuthStateChange((_event,session)=>{currentUser=session?.user||null;renderAuth();if(currentUser)loadFiles();});
+refreshSession();
+</script></body></html>
